@@ -1,0 +1,1976 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI辅助学习利弊辩论系统 · 11-22班</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700;900&family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
+
+  :root {
+    --pro: #e85d04;
+    --pro-light: #fff3e8;
+    --pro-dark: #9c2c00;
+    --con: #1565c0;
+    --con-light: #e8f0fe;
+    --con-dark: #003c8f;
+    --gold: #f9a825;
+    --bg: #0d0d0d;
+    --surface: #1a1a1a;
+    --surface2: #242424;
+    --border: #333;
+    --text: #f0ece4;
+    --text-muted: #888;
+    --hot: #ff4444;
+    --radius: 12px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Noto Sans SC', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ===== HEADER ===== */
+  .header {
+    background: linear-gradient(135deg, #1a0a00 0%, #0a0a1a 50%, #001a0a 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 20px 24px 16px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(20px);
+  }
+  .header-inner {
+    max-width: 1400px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .header-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: clamp(16px, 3vw, 24px);
+    font-weight: 900;
+    letter-spacing: 2px;
+  }
+  .header-title span.pro { color: var(--pro); }
+  .header-title span.con { color: #4fc3f7; }
+  .header-subtitle {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 4px;
+    letter-spacing: 1px;
+  }
+  .header-stats {
+    display: flex;
+    gap: 16px;
+    font-size: 13px;
+  }
+  .stat-item {
+    text-align: center;
+  }
+  .stat-num {
+    font-size: 20px;
+    font-weight: 700;
+    display: block;
+  }
+  .stat-num.pro { color: var(--pro); }
+  .stat-num.con { color: #4fc3f7; }
+  .stat-label { color: var(--text-muted); font-size: 11px; }
+
+  /* ===== MAIN LAYOUT ===== */
+  .main {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px 16px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto auto;
+    gap: 16px;
+  }
+
+  /* ===== PANELS ===== */
+  .panel {
+    background: var(--surface);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .panel-header {
+    padding: 14px 18px;
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 700;
+    font-size: 15px;
+    letter-spacing: 1px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .panel-header.pro { background: linear-gradient(90deg, #3d1200, #1a0800); border-bottom: 2px solid var(--pro); color: #ffb380; }
+  .panel-header.con { background: linear-gradient(90deg, #001233, #000d1a); border-bottom: 2px solid #4fc3f7; color: #90caf9; }
+  .panel-header.neutral { background: linear-gradient(90deg, #1a1a00, #0d0d0d); border-bottom: 2px solid var(--gold); color: var(--gold); }
+  .panel-header.hot { background: linear-gradient(90deg, #2d0000, #1a0000); border-bottom: 2px solid var(--hot); color: #ff8080; }
+
+  /* ===== IDENTITY MODAL ===== */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    backdrop-filter: blur(8px);
+  }
+  .modal {
+    background: var(--surface);
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    padding: 36px;
+    width: 100%;
+    max-width: 480px;
+    animation: modalIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  @keyframes modalIn {
+    from { opacity: 0; transform: scale(0.85) translateY(20px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+  }
+  .modal-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 22px;
+    font-weight: 900;
+    text-align: center;
+    margin-bottom: 8px;
+    letter-spacing: 2px;
+  }
+  .modal-sub {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 13px;
+    margin-bottom: 28px;
+  }
+  .side-choice {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .side-btn {
+    padding: 20px 12px;
+    border-radius: 12px;
+    border: 2px solid transparent;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s;
+    background: var(--surface2);
+    font-family: 'Noto Serif SC', serif;
+  }
+  .side-btn.pro-btn { border-color: var(--pro); }
+  .side-btn.pro-btn:hover, .side-btn.pro-btn.active { background: var(--pro); color: white; }
+  .side-btn.con-btn { border-color: #4fc3f7; }
+  .side-btn.con-btn:hover, .side-btn.con-btn.active { background: #1565c0; color: white; }
+  .side-btn .side-icon { font-size: 28px; display: block; margin-bottom: 6px; }
+  .side-btn .side-name { font-size: 16px; font-weight: 700; display: block; }
+  .side-btn .side-desc { font-size: 11px; color: var(--text-muted); margin-top: 4px; display: block; }
+  .side-btn.active .side-desc { color: rgba(255,255,255,0.7); }
+
+  .form-group { margin-bottom: 16px; }
+  .form-label { font-size: 13px; color: var(--text-muted); margin-bottom: 6px; display: block; }
+  .form-input, .form-select {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: var(--text);
+    font-size: 14px;
+    font-family: 'Noto Sans SC', sans-serif;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .form-input:focus, .form-select:focus { border-color: var(--gold); }
+  .form-select option { background: var(--surface2); }
+
+  .btn-primary {
+    width: 100%;
+    padding: 14px;
+    border-radius: 10px;
+    border: none;
+    font-size: 15px;
+    font-weight: 700;
+    font-family: 'Noto Sans SC', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 1px;
+  }
+  .btn-primary.pro { background: var(--pro); color: white; }
+  .btn-primary.pro:hover { background: #c44d00; transform: translateY(-1px); }
+  .btn-primary.con { background: var(--con); color: white; }
+  .btn-primary.con:hover { background: #003c8f; transform: translateY(-1px); }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  /* ===== DEBATE AREA ===== */
+  .debate-columns {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .opinions-list {
+    padding: 12px;
+    max-height: 420px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .opinions-list::-webkit-scrollbar { width: 4px; }
+  .opinions-list::-webkit-scrollbar-track { background: transparent; }
+  .opinions-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .opinion-card {
+    background: var(--surface2);
+    border-radius: 10px;
+    padding: 12px 14px;
+    border-left: 3px solid transparent;
+    animation: slideIn 0.3s ease;
+    position: relative;
+  }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateX(-10px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+  .opinion-card.pro { border-left-color: var(--pro); }
+  .opinion-card.con { border-left-color: #4fc3f7; }
+  .opinion-card.hot-card { box-shadow: 0 0 12px rgba(255,68,68,0.3); }
+
+  .opinion-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+    flex-wrap: wrap;
+  }
+  .opinion-author {
+    font-weight: 700;
+    font-size: 13px;
+  }
+  .opinion-class {
+    font-size: 11px;
+    color: var(--text-muted);
+    background: var(--surface);
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+  .opinion-time {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-left: auto;
+  }
+  .opinion-text {
+    font-size: 14px;
+    line-height: 1.6;
+    color: #ddd;
+    margin-bottom: 10px;
+  }
+  .opinion-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .action-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 12px;
+    cursor: pointer;
+    color: var(--text-muted);
+    transition: all 0.15s;
+    font-family: 'Noto Sans SC', sans-serif;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .action-btn:hover { border-color: var(--gold); color: var(--gold); }
+  .action-btn.liked { border-color: var(--hot); color: var(--hot); background: rgba(255,68,68,0.1); }
+  .action-btn.comment-toggle { border-color: #4fc3f7; color: #4fc3f7; }
+  .hot-badge {
+    background: var(--hot);
+    color: white;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 700;
+    animation: pulse 1.5s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+  }
+
+  /* Comments */
+  .comments-section {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+    display: none;
+  }
+  .comments-section.open { display: block; }
+  .comment-item {
+    font-size: 12px;
+    padding: 6px 8px;
+    background: var(--surface);
+    border-radius: 6px;
+    margin-bottom: 6px;
+    line-height: 1.5;
+  }
+  .comment-author { font-weight: 700; color: var(--gold); }
+  .comment-input-row {
+    display: flex;
+    gap: 6px;
+    margin-top: 8px;
+  }
+  .comment-input {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 6px 10px;
+    color: var(--text);
+    font-size: 12px;
+    font-family: 'Noto Sans SC', sans-serif;
+    outline: none;
+  }
+  .comment-input:focus { border-color: var(--gold); }
+  .comment-submit {
+    background: var(--gold);
+    color: #000;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: 'Noto Sans SC', sans-serif;
+  }
+
+  /* ===== POST FORM ===== */
+  .post-form {
+    padding: 14px;
+    border-top: 1px solid var(--border);
+    background: var(--surface2);
+  }
+  .post-textarea {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    color: var(--text);
+    font-size: 14px;
+    font-family: 'Noto Sans SC', sans-serif;
+    resize: none;
+    outline: none;
+    min-height: 80px;
+    transition: border-color 0.2s;
+  }
+  .post-textarea:focus { border-color: var(--pro); }
+  .post-textarea.con-focus:focus { border-color: #4fc3f7; }
+  .post-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 8px;
+  }
+  .char-count { font-size: 12px; color: var(--text-muted); }
+  .post-btn {
+    padding: 8px 20px;
+    border-radius: 8px;
+    border: none;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: 'Noto Sans SC', sans-serif;
+    transition: all 0.2s;
+  }
+  .post-btn.pro { background: var(--pro); color: white; }
+  .post-btn.pro:hover { background: #c44d00; }
+  .post-btn.con { background: var(--con); color: white; }
+  .post-btn.con:hover { background: #003c8f; }
+  .post-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* ===== WORDCLOUD ===== */
+  .wordcloud-area {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .wordcloud-canvas {
+    width: 100%;
+    height: 200px;
+    display: block;
+  }
+
+  /* ===== VOTE SECTION ===== */
+  .vote-section {
+    grid-column: 1 / -1;
+  }
+  .vote-inner {
+    padding: 20px;
+  }
+  .vote-title {
+    text-align: center;
+    font-family: 'Noto Serif SC', serif;
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 16px;
+    color: var(--gold);
+  }
+  .vote-bar-wrap {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .vote-label {
+    font-size: 13px;
+    font-weight: 700;
+    width: 60px;
+    text-align: center;
+  }
+  .vote-label.pro { color: var(--pro); }
+  .vote-label.con { color: #4fc3f7; }
+  .vote-bar-track {
+    flex: 1;
+    height: 28px;
+    background: var(--surface2);
+    border-radius: 14px;
+    overflow: hidden;
+    position: relative;
+    border: 1px solid var(--border);
+  }
+  .vote-bar-fill {
+    height: 100%;
+    border-radius: 14px;
+    transition: width 0.5s ease;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 10px;
+    font-size: 12px;
+    font-weight: 700;
+    color: white;
+    min-width: 40px;
+  }
+  .vote-bar-fill.pro { background: linear-gradient(90deg, var(--pro-dark), var(--pro)); }
+  .vote-bar-fill.con { background: linear-gradient(90deg, var(--con-dark), var(--con)); }
+  .vote-count { font-size: 13px; color: var(--text-muted); width: 50px; text-align: center; }
+  .vote-btns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 8px;
+  }
+  .vote-cast-btn {
+    padding: 12px;
+    border-radius: 10px;
+    border: 2px solid transparent;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: 'Noto Serif SC', serif;
+    transition: all 0.2s;
+    letter-spacing: 1px;
+  }
+  .vote-cast-btn.pro { border-color: var(--pro); color: var(--pro); background: transparent; }
+  .vote-cast-btn.pro:hover, .vote-cast-btn.pro.voted { background: var(--pro); color: white; }
+  .vote-cast-btn.con { border-color: #4fc3f7; color: #4fc3f7; background: transparent; }
+  .vote-cast-btn.con:hover, .vote-cast-btn.con.voted { background: var(--con); color: white; }
+  .vote-cast-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .vote-hint { text-align: center; font-size: 12px; color: var(--text-muted); margin-top: 8px; }
+
+  /* ===== TEACHER PANEL ===== */
+  .teacher-section {
+    grid-column: 1 / -1;
+  }
+  .teacher-inner {
+    padding: 20px;
+  }
+  .teacher-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+  .teacher-side {
+    background: var(--surface2);
+    border-radius: 10px;
+    padding: 16px;
+  }
+  .teacher-side-title {
+    font-weight: 700;
+    font-size: 14px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .teacher-side-title.pro { color: var(--pro); }
+  .teacher-side-title.con { color: #4fc3f7; }
+  .score-input-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .score-input {
+    width: 70px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 6px 10px;
+    color: var(--text);
+    font-size: 16px;
+    font-weight: 700;
+    text-align: center;
+    outline: none;
+  }
+  .score-input:focus { border-color: var(--gold); }
+  .score-label { font-size: 13px; color: var(--text-muted); }
+  .teacher-comment-input {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px 10px;
+    color: var(--text);
+    font-size: 13px;
+    font-family: 'Noto Sans SC', sans-serif;
+    resize: none;
+    outline: none;
+    min-height: 70px;
+    margin-bottom: 10px;
+  }
+  .teacher-comment-input:focus { border-color: var(--gold); }
+  .teacher-submit-btn {
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    border: none;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: 'Noto Sans SC', sans-serif;
+    transition: all 0.2s;
+  }
+  .teacher-submit-btn.pro { background: var(--pro); color: white; }
+  .teacher-submit-btn.con { background: var(--con); color: white; }
+  .teacher-result-display {
+    background: var(--surface2);
+    border-radius: 10px;
+    padding: 16px;
+    text-align: center;
+  }
+  .winner-badge {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 20px;
+    font-weight: 900;
+    padding: 12px 24px;
+    border-radius: 10px;
+    display: inline-block;
+    margin-bottom: 8px;
+    letter-spacing: 2px;
+  }
+  .winner-badge.pro { background: linear-gradient(135deg, var(--pro-dark), var(--pro)); color: white; }
+  .winner-badge.con { background: linear-gradient(135deg, var(--con-dark), var(--con)); color: white; }
+  .teacher-eval-display {
+    margin-top: 12px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .eval-box {
+    background: var(--surface);
+    border-radius: 8px;
+    padding: 10px;
+    font-size: 12px;
+    line-height: 1.5;
+  }
+  .eval-box-title { font-weight: 700; margin-bottom: 4px; }
+  .eval-box-title.pro { color: var(--pro); }
+  .eval-box-title.con { color: #4fc3f7; }
+  .eval-score { font-size: 24px; font-weight: 900; }
+  .eval-score.pro { color: var(--pro); }
+  .eval-score.con { color: #4fc3f7; }
+
+  /* ===== HOT PANEL ===== */
+  .hot-section {
+    grid-column: 1 / -1;
+  }
+  .hot-list {
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .hot-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 12px;
+    background: var(--surface2);
+    border-radius: 8px;
+    border-left: 3px solid var(--hot);
+  }
+  .hot-rank {
+    font-size: 18px;
+    font-weight: 900;
+    color: var(--hot);
+    min-width: 24px;
+    font-family: 'Noto Serif SC', serif;
+  }
+  .hot-content { flex: 1; }
+  .hot-meta { font-size: 11px; color: var(--text-muted); margin-bottom: 3px; }
+  .hot-text { font-size: 13px; line-height: 1.5; }
+  .hot-score { font-size: 12px; color: var(--hot); font-weight: 700; }
+
+  /* ===== TOAST ===== */
+  .toast-container {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .toast {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 18px;
+    font-size: 13px;
+    animation: toastIn 0.3s ease;
+    max-width: 280px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+  }
+  @keyframes toastIn {
+    from { opacity: 0; transform: translateX(20px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+  .toast.success { border-left: 3px solid #4caf50; }
+  .toast.error { border-left: 3px solid var(--hot); }
+  .toast.info { border-left: 3px solid var(--gold); }
+
+  /* ===== TEACHER LOGIN ===== */
+  .teacher-lock {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 20px;
+    background: var(--surface2);
+    border-radius: 10px;
+    margin-bottom: 16px;
+  }
+  .teacher-lock input {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px 12px;
+    color: var(--text);
+    font-size: 14px;
+    font-family: 'Noto Sans SC', sans-serif;
+    outline: none;
+    letter-spacing: 4px;
+  }
+  .teacher-lock input:focus { border-color: var(--gold); }
+  .teacher-lock-btn {
+    padding: 8px 16px;
+    background: var(--gold);
+    color: #000;
+    border: none;
+    border-radius: 6px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: 'Noto Sans SC', sans-serif;
+  }
+  .teacher-locked-msg { font-size: 13px; color: var(--text-muted); }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 768px) {
+    .main { grid-template-columns: 1fr; }
+    .debate-columns { grid-template-columns: 1fr; }
+    .wordcloud-area { grid-template-columns: 1fr; }
+    .teacher-grid { grid-template-columns: 1fr; }
+    .vote-btns { grid-template-columns: 1fr; }
+    .teacher-eval-display { grid-template-columns: 1fr; }
+    .side-choice { grid-template-columns: 1fr 1fr; }
+  }
+
+  /* ===== EMPTY STATE ===== */
+  .empty-state {
+    text-align: center;
+    padding: 30px 20px;
+    color: var(--text-muted);
+    font-size: 13px;
+  }
+  .empty-icon { font-size: 32px; margin-bottom: 8px; }
+
+  /* ===== USER INFO BAR ===== */
+  .user-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 16px;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+    flex-wrap: wrap;
+  }
+  .user-tag {
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-weight: 700;
+    font-size: 12px;
+  }
+  .user-tag.pro { background: rgba(232,93,4,0.2); color: var(--pro); border: 1px solid var(--pro); }
+  .user-tag.con { background: rgba(21,101,192,0.2); color: #4fc3f7; border: 1px solid #4fc3f7; }
+  .change-identity-btn {
+    margin-left: auto;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 4px 10px;
+    color: var(--text-muted);
+    font-size: 12px;
+    cursor: pointer;
+    font-family: 'Noto Sans SC', sans-serif;
+    transition: all 0.15s;
+  }
+  .change-identity-btn:hover { border-color: var(--gold); color: var(--gold); }
+
+/* ===== SETUP SCREEN ===== */
+#setupScreen {
+  position: fixed; inset: 0;
+  background: radial-gradient(ellipse at 30% 20%, #1a0800 0%, #0d0d0d 50%, #000d1a 100%);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.setup-card {
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 24px;
+  padding: 40px;
+  width: 100%;
+  max-width: 560px;
+  animation: fadeUp 0.5s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(30px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.setup-logo { text-align: center; font-size: 48px; margin-bottom: 12px; }
+.setup-title {
+  font-family: 'Noto Serif SC', serif;
+  font-size: 22px; font-weight: 900;
+  text-align: center; letter-spacing: 2px; margin-bottom: 6px;
+}
+.setup-sub { text-align: center; color: #888; font-size: 13px; margin-bottom: 28px; }
+.mode-tabs {
+  display: flex; gap: 0;
+  background: #242424; border-radius: 10px;
+  padding: 4px; margin-bottom: 20px;
+}
+.mode-tab {
+  flex: 1; padding: 10px;
+  border-radius: 8px; border: none;
+  background: transparent; color: #888;
+  font-size: 13px; font-weight: 700;
+  cursor: pointer; transition: all 0.2s;
+  font-family: 'Noto Sans SC', sans-serif;
+}
+.mode-tab.active { background: #f9a825; color: #000; }
+.config-box {
+  background: #242424; border-radius: 12px;
+  padding: 18px; margin-bottom: 14px; border: 1px solid #333;
+}
+.config-title { font-size: 13px; font-weight: 700; color: #f9a825; margin-bottom: 10px; }
+.config-hint {
+  font-size: 11px; color: #888;
+  background: rgba(249,168,37,0.07);
+  border-radius: 6px; padding: 10px 12px;
+  border-left: 2px solid #f9a825;
+  line-height: 1.9; margin-bottom: 10px;
+}
+.config-hint b { color: #f9a825; }
+.config-input {
+  width: 100%; background: #1a1a1a;
+  border: 1px solid #333; border-radius: 8px;
+  padding: 9px 12px; color: #f0ece4;
+  font-size: 13px; font-family: 'Noto Sans SC', sans-serif;
+  outline: none; margin-bottom: 8px;
+  transition: border-color 0.2s;
+}
+.config-input:focus { border-color: #f9a825; }
+.connect-btn {
+  width: 100%; padding: 13px; border-radius: 10px; border: none;
+  background: linear-gradient(135deg, #e85d04, #f9a825);
+  color: white; font-size: 14px; font-weight: 700;
+  cursor: pointer; font-family: 'Noto Sans SC', sans-serif;
+  letter-spacing: 1px; transition: all 0.2s;
+}
+.connect-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(232,93,4,0.4); }
+.demo-divider {
+  display: flex; align-items: center; gap: 10px;
+  margin: 16px 0; color: #888; font-size: 12px;
+}
+.demo-divider::before, .demo-divider::after { content: ''; flex: 1; height: 1px; background: #333; }
+.demo-btn {
+  width: 100%; padding: 11px; border-radius: 10px;
+  border: 1px dashed #333; background: transparent;
+  color: #888; font-size: 13px; cursor: pointer;
+  font-family: 'Noto Sans SC', sans-serif; transition: all 0.2s;
+  margin-bottom: 8px;
+}
+.demo-btn:hover { border-color: #f9a825; color: #f9a825; }
+/* Loading */
+.loading-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+  z-index: 1500; display: flex; align-items: center;
+  justify-content: center; flex-direction: column;
+  gap: 14px; backdrop-filter: blur(4px);
+}
+.spinner {
+  width: 36px; height: 36px;
+  border: 3px solid #333; border-top-color: #f9a825;
+  border-radius: 50%; animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-text { color: #888; font-size: 14px; }
+/* Hidden */
+.hidden { display: none !important; }
+
+</style>
+</head>
+<body>
+<!-- SETUP SCREEN -->
+<div id="setupScreen">
+  <div class="setup-card">
+    <div class="setup-logo">&#9915;</div>
+    <div class="setup-title">AI辅助学习利弊辩论系统</div>
+    <div class="setup-sub">11班 &#8212; 22班 &#183; 联合辩论赛</div>
+
+    <div class="mode-tabs">
+      <button class="mode-tab active" id="tabNet" onclick="switchTab('net')">&#127760; Netlify托管模式</button>
+      <button class="mode-tab" id="tabLan" onclick="switchTab('lan')">&#127968; 局域网模式</button>
+    </div>
+
+    <div id="modeNet">
+      <div class="config-box">
+        <div class="config-title">&#128279; Netlify 数据后端配置</div>
+        <div class="config-hint">
+          <b>步骤：</b>1. 打开 <b>app.netlify.com/drop</b><br>
+          2. 把本文件（debate-system-polling.html）拖入上传<br>
+          3. 复制生成的网址，粘贴到下方输入框<br>
+          4. 所有班级用同一网址打开即可跨设备同步
+        </div>
+        <input class="config-input" id="netlifyUrl" placeholder="https://xxx.netlify.app" type="url">
+        <button class="connect-btn" onclick="connectNetlify()">&#9889; 启动辩论系统</button>
+      </div>
+      <div class="demo-divider">或者</div>
+      <button class="demo-btn" onclick="startLocalMode()">&#129514; 演示模式（仅本设备）</button>
+    </div>
+
+    <div id="modeLan" style="display:none">
+      <div class="config-box">
+        <div class="config-title">&#127968; 局域网部署说明</div>
+        <div class="config-hint">
+          <b>单设备：</b>直接双击打开本文件即可<br><br>
+          <b>多设备同步（同一WiFi）：</b><br>
+          1. 在文件所在文件夹打开命令行<br>
+          &nbsp;&nbsp;（地址栏输入 <b>cmd</b> 回车）<br>
+          2. 运行：<b style="color:#fff;background:#333;padding:2px 8px;border-radius:4px">python -m http.server 8080</b><br>
+          3. 其他设备浏览器访问：<b>http://本机IP:8080</b><br>
+          &nbsp;&nbsp;查看IP：Win+R &#8212; cmd &#8212; <b>ipconfig</b>
+        </div>
+        <button class="connect-btn" onclick="startLocalMode()">&#127968; 进入局域网模式</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- LOADING -->
+<div class="loading-overlay" id="loadingOverlay" style="display:none">
+  <div class="spinner"></div>
+  <div class="loading-text" id="loadingText">加载中...</div>
+</div>
+
+
+<!-- IDENTITY MODAL -->
+<div class="modal-overlay hidden" id="identityModal">
+  <div class="modal">
+    <div class="modal-title">⚔️ 加入辩论</div>
+    <div class="modal-sub">AI辅助学习利弊辩论 · 11-22班联合辩论赛</div>
+
+    <div class="side-choice">
+      <div class="side-btn pro-btn" id="proBtn" onclick="selectSide('pro')">
+        <span class="side-icon">🔥</span>
+        <span class="side-name">正方</span>
+        <span class="side-desc">AI辅助学习利大于弊</span>
+      </div>
+      <div class="side-btn con-btn" id="conBtn" onclick="selectSide('con')">
+        <span class="side-icon">🌊</span>
+        <span class="side-name">反方</span>
+        <span class="side-desc">AI辅助学习弊大于利</span>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">班级</label>
+      <select class="form-select" id="classSelect">
+        <option value="">请选择班级</option>
+        <option value="11班">11班</option>
+        <option value="12班">12班</option>
+        <option value="13班">13班</option>
+        <option value="14班">14班</option>
+        <option value="15班">15班</option>
+        <option value="16班">16班</option>
+        <option value="17班">17班</option>
+        <option value="18班">18班</option>
+        <option value="19班">19班</option>
+        <option value="20班">20班</option>
+        <option value="21班">21班</option>
+        <option value="22班">22班</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">姓名</label>
+      <input type="text" class="form-input" id="nameInput" placeholder="请输入你的姓名" maxlength="10">
+    </div>
+
+    <button class="btn-primary pro" id="joinBtn" onclick="joinDebate()" disabled>加入辩论</button>
+  </div>
+</div>
+
+<!-- HEADER -->
+<div class="header hidden" id="mainHeader">
+  <div class="header-inner">
+    <div>
+      <div class="header-title">
+        <span class="pro">正方</span> ⚔️ AI辅助学习利弊辩论 ⚔️ <span class="con">反方</span>
+      </div>
+      <div class="header-subtitle">11班 — 22班 · 联合辩论赛 · 实时互动</div>
+    </div>
+    <div class="header-stats">
+      <div class="stat-item">
+        <span class="stat-num pro" id="proCount">0</span>
+        <span class="stat-label">正方观点</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-num con" id="conCount">0</span>
+        <span class="stat-label">反方观点</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-num" style="color:var(--gold)" id="totalVotes">0</span>
+        <span class="stat-label">总投票</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- USER BAR -->
+<div class="user-bar hidden" id="userBar" style="display:none">
+  <span id="userBarName"></span>
+  <span class="user-tag" id="userBarTag"></span>
+  <span style="color:var(--text-muted)" id="userBarClass"></span>
+  <button class="change-identity-btn" onclick="changeIdentity()">切换身份</button>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- HOT OPINIONS -->
+  <div class="panel hot-section" id="hotSection">
+    <div class="panel-header hot">🔥 热点观点榜</div>
+    <div class="hot-list" id="hotList">
+      <div class="empty-state"><div class="empty-icon">🌟</div>暂无热点，快来发表观点吧！</div>
+    </div>
+  </div>
+
+  <!-- DEBATE COLUMNS -->
+  <div class="debate-columns">
+    <!-- PRO SIDE -->
+    <div class="panel">
+      <div class="panel-header pro">🔥 正方 · AI辅助学习利大于弊</div>
+      <div class="opinions-list" id="proList">
+        <div class="empty-state"><div class="empty-icon">💬</div>正方暂无观点</div>
+      </div>
+      <div class="post-form" id="proForm" style="display:none">
+        <textarea class="post-textarea" id="proTextarea" placeholder="发表你的正方观点..." maxlength="300" oninput="updateCharCount('pro')"></textarea>
+        <div class="post-footer">
+          <span class="char-count" id="proCharCount">0/300</span>
+          <button class="post-btn pro" id="proPostBtn" onclick="postOpinion('pro')">发表观点 🔥</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- CON SIDE -->
+    <div class="panel">
+      <div class="panel-header con">🌊 反方 · AI辅助学习弊大于利</div>
+      <div class="opinions-list" id="conList">
+        <div class="empty-state"><div class="empty-icon">💬</div>反方暂无观点</div>
+      </div>
+      <div class="post-form" id="conForm" style="display:none">
+        <textarea class="post-textarea con-focus" id="conTextarea" placeholder="发表你的反方观点..." maxlength="300" oninput="updateCharCount('con')"></textarea>
+        <div class="post-footer">
+          <span class="char-count" id="conCharCount">0/300</span>
+          <button class="post-btn con" id="conPostBtn" onclick="postOpinion('con')">发表观点 🌊</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WORDCLOUD -->
+  <div class="wordcloud-area">
+    <div class="panel">
+      <div class="panel-header pro">☁️ 正方词云</div>
+      <canvas class="wordcloud-canvas" id="proCloud"></canvas>
+    </div>
+    <div class="panel">
+      <div class="panel-header con">☁️ 反方词云</div>
+      <canvas class="wordcloud-canvas" id="conCloud"></canvas>
+    </div>
+  </div>
+
+  <!-- VOTE -->
+  <div class="panel vote-section">
+    <div class="panel-header neutral">🗳️ 学生投票 · 选出胜方</div>
+    <div class="vote-inner">
+      <div class="vote-title">你认为哪方更有说服力？</div>
+      <div class="vote-bar-wrap">
+        <span class="vote-label pro">正方</span>
+        <div class="vote-bar-track">
+          <div class="vote-bar-fill pro" id="proVoteBar" style="width:50%">50%</div>
+        </div>
+        <span class="vote-count" id="proVoteCount">0票</span>
+      </div>
+      <div class="vote-bar-wrap">
+        <span class="vote-label con">反方</span>
+        <div class="vote-bar-track">
+          <div class="vote-bar-fill con" id="conVoteBar" style="width:50%">50%</div>
+        </div>
+        <span class="vote-count" id="conVoteCount">0票</span>
+      </div>
+      <div class="vote-btns">
+        <button class="vote-cast-btn pro" id="voteProBtn" onclick="castVote('pro')">🔥 投票正方</button>
+        <button class="vote-cast-btn con" id="voteConBtn" onclick="castVote('con')">🌊 投票反方</button>
+      </div>
+      <div class="vote-hint" id="voteHint">每人只能投一票</div>
+    </div>
+  </div>
+
+  <!-- TEACHER PANEL -->
+  <div class="panel teacher-section">
+    <div class="panel-header neutral">👨‍🏫 教师评价 · 打分选胜方</div>
+    <div class="teacher-inner">
+      <div class="teacher-lock" id="teacherLock">
+        <span class="teacher-locked-msg">🔒 教师专区（输入密码解锁）</span>
+        <input type="password" id="teacherPwd" placeholder="••••" maxlength="4" onkeydown="if(event.key==='Enter')teacherLogin()">
+        <button class="teacher-lock-btn" onclick="teacherLogin()">解锁</button>
+      </div>
+      <div id="teacherPanel" style="display:none">
+        <div class="teacher-grid">
+          <div class="teacher-side">
+            <div class="teacher-side-title pro">🔥 正方评价</div>
+            <div class="score-input-wrap">
+              <input type="number" class="score-input" id="proScore" min="0" max="100" placeholder="85">
+              <span class="score-label">分（0-100）</span>
+            </div>
+            <textarea class="teacher-comment-input" id="proComment" placeholder="对正方的评价..."></textarea>
+            <button class="teacher-submit-btn pro" onclick="submitTeacherEval('pro')">提交正方评价</button>
+          </div>
+          <div class="teacher-side">
+            <div class="teacher-side-title con">🌊 反方评价</div>
+            <div class="score-input-wrap">
+              <input type="number" class="score-input" id="conScore" min="0" max="100" placeholder="80">
+              <span class="score-label">分（0-100）</span>
+            </div>
+            <textarea class="teacher-comment-input" id="conComment" placeholder="对反方的评价..."></textarea>
+            <button class="teacher-submit-btn con" onclick="submitTeacherEval('con')">提交反方评价</button>
+          </div>
+        </div>
+        <div class="teacher-result-display" id="teacherResult">
+          <div style="color:var(--text-muted);font-size:13px">提交双方评价后将自动显示胜方</div>
+        </div>
+        <div style="margin-top:12px;text-align:center">
+          <button onclick="resetData()" style="background:transparent;border:1px solid #555;border-radius:6px;padding:8px 20px;color:#888;cursor:pointer;font-family:'Noto Sans SC',sans-serif;font-size:13px">🔄 重置所有数据</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- TOAST CONTAINER -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+// ===== DATA STORE =====
+const STORAGE_KEY = 'debate_data_v3';
+const SYNC_CHANNEL = 'debate_sync';
+
+let currentUser = null;
+let bc = null;
+
+function getStore() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return defaultStore();
+    return JSON.parse(raw);
+  } catch(e) { return defaultStore(); }
+}
+
+function defaultStore() {
+  return {
+    opinions: [],
+    votes: { pro: 0, con: 0 },
+    userVotes: {},
+    teacher: { pro: null, con: null },
+    lastUpdate: Date.now()
+  };
+}
+
+function saveStore(store) {
+  store.lastUpdate = Date.now();
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
+  if (bc) bc.postMessage({ type: 'update', ts: store.lastUpdate });
+}
+
+// ===== BROADCAST CHANNEL (same-device multi-tab sync) =====
+function initBroadcast() {
+  try {
+    bc = new BroadcastChannel(SYNC_CHANNEL);
+    bc.onmessage = (e) => {
+      if (e.data.type === 'update') {
+        renderAll();
+      }
+    };
+  } catch(e) { bc = null; }
+}
+
+// ===== POLLING (cross-device sync simulation) =====
+let lastSyncTs = 0;
+function startPolling() {
+  setInterval(() => {
+    const store = getStore();
+    if (store.lastUpdate !== lastSyncTs) {
+      lastSyncTs = store.lastUpdate;
+      renderAll();
+    }
+  }, 2000);
+}
+
+// ===== IDENTITY =====
+function selectSide(side) {
+  document.getElementById('proBtn').classList.toggle('active', side === 'pro');
+  document.getElementById('conBtn').classList.toggle('active', side === 'con');
+  document.getElementById('joinBtn').dataset.side = side;
+  document.getElementById('joinBtn').className = `btn-primary ${side}`;
+  document.getElementById('joinBtn').disabled = false;
+  checkJoinReady();
+}
+
+function checkJoinReady() {
+  const side = document.getElementById('joinBtn').dataset.side;
+  const name = document.getElementById('nameInput').value.trim();
+  const cls = document.getElementById('classSelect').value;
+  document.getElementById('joinBtn').disabled = !(side && name && cls);
+}
+
+document.getElementById('nameInput').addEventListener('input', checkJoinReady);
+document.getElementById('classSelect').addEventListener('change', checkJoinReady);
+
+function joinDebate() {
+  const side = document.getElementById('joinBtn').dataset.side;
+  const name = document.getElementById('nameInput').value.trim();
+  const cls = document.getElementById('classSelect').value;
+  if (!side || !name || !cls) return;
+
+  currentUser = { side, name, cls, id: `${cls}_${name}_${Date.now()}` };
+  document.getElementById('identityModal').style.display = 'none';
+  showUserBar();
+  showPostForm();
+  renderAll();
+  showToast(`欢迎 ${name} 加入${side === 'pro' ? '正方' : '反方'}！`, 'success');
+}
+
+function showUserBar() {
+  const bar = document.getElementById('userBar');
+  bar.style.display = 'flex';
+  document.getElementById('userBarName').textContent = currentUser.name;
+  const tag = document.getElementById('userBarTag');
+  tag.textContent = currentUser.side === 'pro' ? '🔥 正方' : '🌊 反方';
+  tag.className = `user-tag ${currentUser.side}`;
+  document.getElementById('userBarClass').textContent = currentUser.cls;
+}
+
+function showPostForm() {
+  document.getElementById('proForm').style.display = currentUser.side === 'pro' ? 'block' : 'none';
+  document.getElementById('conForm').style.display = currentUser.side === 'con' ? 'block' : 'none';
+}
+
+function changeIdentity() {
+  currentUser = null;
+  document.getElementById('userBar').style.display = 'none';
+  document.getElementById('proForm').style.display = 'none';
+  document.getElementById('conForm').style.display = 'none';
+  document.getElementById('identityModal').style.display = 'flex';
+  document.getElementById('proBtn').classList.remove('active');
+  document.getElementById('conBtn').classList.remove('active');
+  document.getElementById('joinBtn').disabled = true;
+  document.getElementById('nameInput').value = '';
+  document.getElementById('classSelect').value = '';
+}
+
+// ===== POST OPINION =====
+function updateCharCount(side) {
+  const ta = document.getElementById(`${side}Textarea`);
+  document.getElementById(`${side}CharCount`).textContent = `${ta.value.length}/300`;
+}
+
+function postOpinion(side) {
+  if (!currentUser) return;
+  const ta = document.getElementById(`${side}Textarea`);
+  const text = ta.value.trim();
+  if (!text) { showToast('请输入观点内容', 'error'); return; }
+  if (text.length < 5) { showToast('观点太短，请至少输入5个字', 'error'); return; }
+
+  const store = getStore();
+
+  // Duplicate check
+  const recent = store.opinions.filter(o => o.authorId === currentUser.id);
+  if (recent.some(o => o.text === text)) {
+    showToast('请勿重复发表相同内容', 'error');
+    return;
+  }
+
+  const opinion = {
+    id: `op_${Date.now()}_${Math.random().toString(36).slice(2,6)}`,
+    side,
+    text,
+    author: currentUser.name,
+    cls: currentUser.cls,
+    authorId: currentUser.id,
+    time: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }),
+    likes: 0,
+    likedBy: [],
+    comments: []
+  };
+
+  store.opinions.push(opinion);
+  saveStore(store);
+
+  ta.value = '';
+  updateCharCount(side);
+  renderAll();
+  showToast('观点发表成功！', 'success');
+}
+
+// ===== LIKE =====
+function likeOpinion(id) {
+  if (!currentUser) return;
+  const store = getStore();
+  const op = store.opinions.find(o => o.id === id);
+  if (!op) return;
+
+  if (op.likedBy.includes(currentUser.id)) {
+    op.likedBy = op.likedBy.filter(x => x !== currentUser.id);
+    op.likes = Math.max(0, op.likes - 1);
+  } else {
+    op.likedBy.push(currentUser.id);
+    op.likes++;
+  }
+  saveStore(store);
+  renderAll();
+}
+
+// ===== COMMENT =====
+function toggleComments(id) {
+  const sec = document.getElementById(`comments_${id}`);
+  if (sec) sec.classList.toggle('open');
+}
+
+function submitComment(id) {
+  if (!currentUser) return;
+  const input = document.getElementById(`commentInput_${id}`);
+  const text = input.value.trim();
+  if (!text) return;
+
+  const store = getStore();
+  const op = store.opinions.find(o => o.id === id);
+  if (!op) return;
+
+  op.comments.push({
+    author: currentUser.name,
+    cls: currentUser.cls,
+    text,
+    time: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+  });
+  saveStore(store);
+  input.value = '';
+  renderAll();
+  // Re-open comments
+  setTimeout(() => {
+    const sec = document.getElementById(`comments_${id}`);
+    if (sec) sec.classList.add('open');
+  }, 50);
+}
+
+// ===== VOTE =====
+function castVote(side) {
+  if (!currentUser) return;
+  const store = getStore();
+  if (store.userVotes[currentUser.id]) {
+    showToast('你已经投过票了', 'error');
+    return;
+  }
+  store.votes[side]++;
+  store.userVotes[currentUser.id] = side;
+  saveStore(store);
+  renderAll();
+  showToast(`已投票${side === 'pro' ? '正方' : '反方'}！`, 'success');
+}
+
+// ===== TEACHER =====
+let teacherUnlocked = false;
+
+function teacherLogin() {
+  const pwd = document.getElementById('teacherPwd').value;
+  if (pwd === '1234') {
+    teacherUnlocked = true;
+    document.getElementById('teacherLock').style.display = 'none';
+    document.getElementById('teacherPanel').style.display = 'block';
+    showToast('教师模式已解锁', 'success');
+  } else {
+    showToast('密码错误', 'error');
+  }
+}
+
+function submitTeacherEval(side) {
+  const score = parseInt(document.getElementById(`${side}Score`).value);
+  const comment = document.getElementById(`${side}Comment`).value.trim();
+  if (isNaN(score) || score < 0 || score > 100) {
+    showToast('请输入0-100的分数', 'error');
+    return;
+  }
+  const store = getStore();
+  store.teacher[side] = { score, comment };
+  saveStore(store);
+  renderAll();
+  showToast(`${side === 'pro' ? '正方' : '反方'}评价已提交`, 'success');
+}
+
+function resetData() {
+  if (!confirm('确认重置所有辩论数据？此操作不可撤销。')) return;
+  localStorage.removeItem(STORAGE_KEY);
+  if (bc) bc.postMessage({ type: 'update', ts: Date.now() });
+  renderAll();
+  showToast('数据已重置', 'info');
+}
+
+// ===== RENDER =====
+function renderAll() {
+  const store = getStore();
+  renderOpinions(store);
+  renderVotes(store);
+  renderHot(store);
+  renderTeacherResult(store);
+  renderWordClouds(store);
+  updateHeaderStats(store);
+}
+
+function updateHeaderStats(store) {
+  const pros = store.opinions.filter(o => o.side === 'pro');
+  const cons = store.opinions.filter(o => o.side === 'con');
+  document.getElementById('proCount').textContent = pros.length;
+  document.getElementById('conCount').textContent = cons.length;
+  document.getElementById('totalVotes').textContent = store.votes.pro + store.votes.con;
+}
+
+function renderOpinions(store) {
+  const proOps = store.opinions.filter(o => o.side === 'pro').reverse();
+  const conOps = store.opinions.filter(o => o.side === 'con').reverse();
+
+  renderOpinionList('proList', proOps, 'pro');
+  renderOpinionList('conList', conOps, 'con');
+}
+
+function renderOpinionList(containerId, ops, side) {
+  const container = document.getElementById(containerId);
+  if (ops.length === 0) {
+    container.innerHTML = `<div class="empty-state"><div class="empty-icon">💬</div>${side === 'pro' ? '正方' : '反方'}暂无观点</div>`;
+    return;
+  }
+
+  // Preserve open comment sections
+  const openComments = new Set();
+  container.querySelectorAll('.comments-section.open').forEach(el => {
+    openComments.add(el.id.replace('comments_', ''));
+  });
+
+  const hotIds = getHotIds(ops);
+
+  container.innerHTML = ops.map(op => {
+    const isLiked = currentUser && op.likedBy.includes(currentUser.id);
+    const isHot = hotIds.includes(op.id);
+    const commentsOpen = openComments.has(op.id);
+    return `
+      <div class="opinion-card ${side}${isHot ? ' hot-card' : ''}">
+        <div class="opinion-meta">
+          <span class="opinion-author">${escHtml(op.author)}</span>
+          <span class="opinion-class">${escHtml(op.cls)}</span>
+          ${isHot ? '<span class="hot-badge">🔥 热点</span>' : ''}
+          <span class="opinion-time">${op.time}</span>
+        </div>
+        <div class="opinion-text">${escHtml(op.text)}</div>
+        <div class="opinion-actions">
+          <button class="action-btn ${isLiked ? 'liked' : ''}" onclick="likeOpinion('${op.id}')">
+            ❤️ ${op.likes}
+          </button>
+          <button class="action-btn comment-toggle" onclick="toggleComments('${op.id}')">
+            💬 ${op.comments.length}条评论
+          </button>
+        </div>
+        <div class="comments-section${commentsOpen ? ' open' : ''}" id="comments_${op.id}">
+          ${op.comments.map(c => `
+            <div class="comment-item">
+              <span class="comment-author">${escHtml(c.author)}</span>
+              <span style="color:var(--text-muted);font-size:10px"> · ${escHtml(c.cls)} · ${c.time}</span>
+              <br>${escHtml(c.text)}
+            </div>
+          `).join('')}
+          <div class="comment-input-row">
+            <input class="comment-input" id="commentInput_${op.id}" placeholder="发表评论..." maxlength="100"
+              onkeydown="if(event.key==='Enter')submitComment('${op.id}')">
+            <button class="comment-submit" onclick="submitComment('${op.id}')">发送</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function getHotIds(ops) {
+  return ops
+    .map(op => ({ id: op.id, score: op.likes * 2 + op.comments.length }))
+    .filter(x => x.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 3)
+    .map(x => x.id);
+}
+
+function renderHot(store) {
+  const all = store.opinions.map(op => ({
+    ...op,
+    score: op.likes * 2 + op.comments.length
+  })).filter(op => op.score > 0).sort((a, b) => b.score - a.score).slice(0, 5);
+
+  const container = document.getElementById('hotList');
+  if (all.length === 0) {
+    container.innerHTML = '<div class="empty-state"><div class="empty-icon">🌟</div>暂无热点，快来发表观点吧！</div>';
+    return;
+  }
+  container.innerHTML = all.map((op, i) => `
+    <div class="hot-item">
+      <span class="hot-rank">${i + 1}</span>
+      <div class="hot-content">
+        <div class="hot-meta">
+          <span style="color:${op.side === 'pro' ? 'var(--pro)' : '#4fc3f7'}">${op.side === 'pro' ? '🔥正方' : '🌊反方'}</span>
+          · ${escHtml(op.author)} · ${escHtml(op.cls)}
+        </div>
+        <div class="hot-text">${escHtml(op.text.slice(0, 80))}${op.text.length > 80 ? '...' : ''}</div>
+        <div class="hot-score">❤️${op.likes} 💬${op.comments.length} · 热度${op.score}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderVotes(store) {
+  const total = store.votes.pro + store.votes.con;
+  const proPct = total === 0 ? 50 : Math.round(store.votes.pro / total * 100);
+  const conPct = 100 - proPct;
+
+  document.getElementById('proVoteBar').style.width = proPct + '%';
+  document.getElementById('proVoteBar').textContent = proPct + '%';
+  document.getElementById('conVoteBar').style.width = conPct + '%';
+  document.getElementById('conVoteBar').textContent = conPct + '%';
+  document.getElementById('proVoteCount').textContent = store.votes.pro + '票';
+  document.getElementById('conVoteCount').textContent = store.votes.con + '票';
+
+  if (currentUser && store.userVotes[currentUser.id]) {
+    const voted = store.userVotes[currentUser.id];
+    document.getElementById('voteProBtn').classList.toggle('voted', voted === 'pro');
+    document.getElementById('voteConBtn').classList.toggle('voted', voted === 'con');
+    document.getElementById('voteProBtn').disabled = true;
+    document.getElementById('voteConBtn').disabled = true;
+    document.getElementById('voteHint').textContent = `你已投票${voted === 'pro' ? '正方' : '反方'}`;
+  }
+}
+
+function renderTeacherResult(store) {
+  const t = store.teacher;
+  if (!t.pro && !t.con) return;
+
+  const container = document.getElementById('teacherResult');
+  let html = '<div class="teacher-eval-display">';
+
+  if (t.pro) {
+    html += `<div class="eval-box">
+      <div class="eval-box-title pro">🔥 正方</div>
+      <div class="eval-score pro">${t.pro.score}分</div>
+      <div style="font-size:12px;color:var(--text-muted);margin-top:6px">${escHtml(t.pro.comment || '')}</div>
+    </div>`;
+  }
+  if (t.con) {
+    html += `<div class="eval-box">
+      <div class="eval-box-title con">🌊 反方</div>
+      <div class="eval-score con">${t.con.score}分</div>
+      <div style="font-size:12px;color:var(--text-muted);margin-top:6px">${escHtml(t.con.comment || '')}</div>
+    </div>`;
+  }
+  html += '</div>';
+
+  if (t.pro && t.con) {
+    const winner = t.pro.score >= t.con.score ? 'pro' : 'con';
+    const winnerName = winner === 'pro' ? '🔥 正方获胜' : '🌊 反方获胜';
+    html = `<div class="winner-badge ${winner}">${winnerName}</div>` + html;
+  }
+
+  container.innerHTML = html;
+}
+
+// ===== WORD CLOUD =====
+function renderWordClouds(store) {
+  const proTexts = store.opinions.filter(o => o.side === 'pro').map(o => o.text).join(' ');
+  const conTexts = store.opinions.filter(o => o.side === 'con').map(o => o.text).join(' ');
+  drawWordCloud('proCloud', proTexts, '#e85d04', '#ff9a5c');
+  drawWordCloud('conCloud', conTexts, '#4fc3f7', '#90caf9');
+}
+
+function extractWords(text) {
+  if (!text) return {};
+  // Simple Chinese word frequency (split by common patterns)
+  const stopWords = new Set(['的','了','是','在','我','有','和','就','不','人','都','一','一个','上','也','很','到','说','要','去','你','会','着','没有','看','好','自己','这']);
+  const words = text.replace(/[，。！？、；：""''（）【】\s]/g, ' ').split(/\s+/).filter(w => w.length >= 2 && !stopWords.has(w));
+  const freq = {};
+  words.forEach(w => { freq[w] = (freq[w] || 0) + 1; });
+  return freq;
+}
+
+function drawWordCloud(canvasId, text, color1, color2) {
+  const canvas = document.getElementById(canvasId);
+  const ctx = canvas.getContext('2d');
+  const W = canvas.offsetWidth || 400;
+  const H = 200;
+  canvas.width = W;
+  canvas.height = H;
+
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = '#1a1a1a';
+  ctx.fillRect(0, 0, W, H);
+
+  const freq = extractWords(text);
+  const entries = Object.entries(freq).sort((a, b) => b[1] - a[1]).slice(0, 30);
+
+  if (entries.length === 0) {
+    ctx.fillStyle = '#444';
+    ctx.font = '14px Noto Sans SC';
+    ctx.textAlign = 'center';
+    ctx.fillText('暂无数据', W / 2, H / 2);
+    return;
+  }
+
+  const maxFreq = entries[0][1];
+  const placed = [];
+
+  entries.forEach(([word, freq], i) => {
+    const size = Math.max(12, Math.min(36, 12 + (freq / maxFreq) * 24));
+    const alpha = 0.5 + (freq / maxFreq) * 0.5;
+    ctx.font = `${Math.round(size)}px Noto Sans SC`;
+    const w = ctx.measureText(word).width;
+    const h = size;
+
+    let x, y, attempts = 0;
+    do {
+      x = Math.random() * (W - w - 10) + 5;
+      y = Math.random() * (H - h - 10) + h + 5;
+      attempts++;
+    } while (attempts < 50 && placed.some(p => Math.abs(p.x - x) < p.w + w / 2 + 4 && Math.abs(p.y - y) < p.h + h / 2 + 4));
+
+    const t = i / entries.length;
+    const r1 = parseInt(color1.slice(1, 3), 16);
+    const g1 = parseInt(color1.slice(3, 5), 16);
+    const b1 = parseInt(color1.slice(5, 7), 16);
+    const r2 = parseInt(color2.slice(1, 3), 16);
+    const g2 = parseInt(color2.slice(3, 5), 16);
+    const b2 = parseInt(color2.slice(5, 7), 16);
+    const r = Math.round(r1 + (r2 - r1) * t);
+    const g = Math.round(g1 + (g2 - g1) * t);
+    const b = Math.round(b1 + (b2 - b1) * t);
+
+    ctx.fillStyle = `rgba(${r},${g},${b},${alpha})`;
+    ctx.fillText(word, x, y);
+    placed.push({ x: x + w / 2, y: y - h / 2, w: w / 2, h: h / 2 });
+  });
+}
+
+// ===== TOAST =====
+function showToast(msg, type = 'info') {
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.textContent = msg;
+  container.appendChild(toast);
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transition = 'opacity 0.3s';
+    setTimeout(() => toast.remove(), 300);
+  }, 2500);
+}
+
+// ===== UTILS =====
+function escHtml(str) {
+  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+// ===== INIT =====
+initBroadcast();
+startPolling();
+renderAll();
+
+// Redraw word clouds on resize
+window.addEventListener('resize', () => {
+  const store = getStore();
+  renderWordClouds(store);
+});
+
+// ========== MODE SELECTOR ==========
+var APP_MODE = 'none'; // 'none' | 'local' | 'net'
+var NET_BASE_URL = '';
+
+function switchTab(tab) {
+  document.getElementById('tabNet').classList.toggle('active', tab==='net');
+  document.getElementById('tabLan').classList.toggle('active', tab==='lan');
+  document.getElementById('modeNet').style.display = tab==='net' ? '' : 'none';
+  document.getElementById('modeLan').style.display = tab==='lan' ? '' : 'none';
+}
+
+function showLoading(msg) {
+  document.getElementById('loadingText').textContent = msg || '加载中...';
+  document.getElementById('loadingOverlay').style.display = 'flex';
+}
+function hideLoading() {
+  document.getElementById('loadingOverlay').style.display = 'none';
+}
+
+function connectNetlify() {
+  var url = document.getElementById('netlifyUrl').value.trim().replace(/\/$/, '');
+  if (!url || url.indexOf('http') !== 0) {
+    toast('请输入有效的 Netlify 网址', 'error'); return;
+  }
+  NET_BASE_URL = url;
+  APP_MODE = 'net';
+  showLoading('正在连接...');
+  // Test connection by trying to fetch debate data
+  fetch(url + '/debate.json', { method: 'GET' })
+    .then(function(r) { return r.ok ? r.json() : null; })
+    .then(function(data) {
+      hideLoading();
+      // Initialize data structure if empty
+      if (!data) {
+        fetch(url + '/debate.json', { method: 'PUT',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({opinions:{}, votes:{pro:0,con:0}, userVotes:{}, teacher:{}, _ping: Date.now()})
+        });
+      }
+      _startApp('net');
+    })
+    .catch(function() {
+      // Try creating data
+      fetch(url + '/debate.json', { method: 'PUT',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({opinions:{}, votes:{pro:0,con:0}, userVotes:{}, teacher:{}, _ping: Date.now()})
+      }).then(function() {
+        hideLoading();
+        _startApp('net');
+      }).catch(function() {
+        hideLoading();
+        toast('连接失败，请检查网址是否正确', 'error');
+      });
+    });
+}
+
+function startLocalMode() {
+  APP_MODE = 'local';
+  NET_BASE_URL = '';
+  _startApp('local');
+}
+
+function _startApp(mode) {
+  document.getElementById('setupScreen').style.display = 'none';
+  document.getElementById('identityModal').classList.remove('hidden');
+  document.getElementById('mainHeader').classList.remove('hidden');
+  document.getElementById('mainContent').classList.remove('hidden');
+
+  if (mode === 'net') {
+    // Start polling
+    startPolling(NET_BASE_URL);
+  } else {
+    // Local mode: BroadcastChannel + localStorage polling
+    initBroadcast();
+    startPolling(null);
+  }
+
+  // Restore session
+  var saved = sessionStorage.getItem('debateUser');
+  if (saved) {
+    try {
+      currentUser = JSON.parse(saved);
+      showUserBar();
+      showPostForm();
+    } catch(e) {}
+  }
+  renderAll(getStore());
+}
+
+// Patch existing functions to use mode
+var _origPostOpinion = postOpinion;
+window.postOpinion = function(side) {
+  if (!currentUser) { toast('请先加入辩论', 'error'); return; }
+  var ta = document.getElementById(side + 'Textarea');
+  var text = ta.value.trim();
+  if (!text || text.length < 5) { toast('请输入至少5个字的观点', 'error'); return; }
+  var s = getStore();
+  var recent = Object.values(s.opinions || {}).filter(function(o){ return o.authorId === currentUser.id; });
+  if (recent.some(function(o){ return o.text === text; })) {
+    toast('请勿重复发表相同内容', 'error'); return;
+  }
+  var id = 'op_' + Date.now() + '_' + Math.random().toString(36).slice(2,6);
+  var opinion = {
+    id: id, side: side, text: text,
+    author: currentUser.name, cls: currentUser.cls,
+    authorId: currentUser.id,
+    time: new Date().toLocaleTimeString('zh-CN', {hour:'2-digit', minute:'2-digit'}),
+    likes: 0, likedBy: {}, comments: {}
+  };
+  s.opinions = s.opinions || {};
+  s.opinions[id] = opinion;
+  saveStore(s);
+  ta.value = '';
+  updateCharCount(side);
+  if (APP_MODE === 'net') syncToRemote(opinion, 'opinion-add');
+  renderAll(getStore());
+  toast('观点发表成功！', 'success');
+};
+
+var _origLikeOpinion = likeOpinion;
+window.likeOpinion = function(id) {
+  if (!currentUser) { toast('请先加入辩论', 'error'); return; }
+  var s = getStore();
+  var op = s.opinions[id]; if (!op) return;
+  op.likedBy = op.likedBy || {};
+  if (op.likedBy[currentUser.id]) {
+    delete op.likedBy[currentUser.id];
+    op.likes = Math.max(0, (op.likes||0) - 1);
+  } else {
+    op.likedBy[currentUser.id] = true;
+    op.likes = (op.likes||0) + 1;
+  }
+  saveStore(s);
+  if (APP_MODE === 'net') syncToRemote({id: id, likes: op.likes, likedBy: op.likedBy}, 'opinion-update');
+  renderAll(getStore());
+};
+
+var _origSubmitComment = submitComment;
+window.submitComment = function(id) {
+  if (!currentUser) return;
+  var input = document.getElementById('commentInput_' + id);
+  var text = input.value.trim();
+  if (!text) return;
+  var s = getStore();
+  var op = s.opinions[id]; if (!op) return;
+  op.comments = op.comments || {};
+  var cid = 'c_' + Date.now();
+  op.comments[cid] = {author: currentUser.name, cls: currentUser.cls, text: text,
+    time: new Date().toLocaleTimeString('zh-CN', {hour:'2-digit', minute:'2-digit'})};
+  saveStore(s);
+  input.value = '';
+  if (APP_MODE === 'net') syncToRemote({opId: id, comment: op.comments[cid]}, 'comment-add');
+  renderAll(getStore());
+};
+
+var _origCastVote = castVote;
+window.castVote = function(side) {
+  if (!currentUser) { toast('请先加入辩论', 'error'); return; }
+  var s = getStore();
+  if (s.userVotes && s.userVotes[currentUser.id]) { toast('你已经投过票了', 'error'); return; }
+  s.votes = s.votes || {pro:0, con:0};
+  s.votes[side]++;
+  s.userVotes = s.userVotes || {};
+  s.userVotes[currentUser.id] = side;
+  saveStore(s);
+  if (APP_MODE === 'net') syncToRemote({side: side, userId: currentUser.id}, 'vote-add');
+  renderAll(getStore());
+  toast('已投票' + (side==='pro'?'正方':'反方') + '！', 'success');
+};
+
+var _origTeacherEval = submitTeacherEval;
+window.submitTeacherEval = function(side) {
+  var score = parseInt(document.getElementById(side+'Score').value);
+  var comment = document.getElementById(side+'Comment').value.trim();
+  if (isNaN(score)||score<0||score>100) { toast('请输入0-100的分数', 'error'); return; }
+  var s = getStore();
+  s.teacher = s.teacher || {};
+  s.teacher[side] = {score: score, comment: comment};
+  saveStore(s);
+  if (APP_MODE === 'net') syncToRemote({side: side, score: score, comment: comment}, 'teacher-eval');
+  renderAll(getStore());
+  toast((side==='pro'?'正方':'反方') + '评价已提交', 'success');
+};
+
+var _origReset = resetData;
+window.resetData = function() {
+  if (!confirm('确认重置所有辩论数据？此操作不可撤销。')) return;
+  var empty = {opinions:{}, votes:{pro:0,con:0}, userVotes:{}, teacher:{}};
+  saveStore(empty);
+  if (APP_MODE === 'net') {
+    fetch(NET_BASE_URL + '/debate.json', {method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(empty)});
+  }
+  renderAll(empty);
+  toast('数据已重置', 'info');
+};
+
+// ---- Remote sync (Netlify) ----
+function startPolling(baseUrl) {
+  if (baseUrl) {
+    // Netlify polling mode
+    setInterval(function() {
+      fetch(baseUrl + '/debate.json')
+        .then(function(r){ return r.json(); })
+        .then(function(data) {
+          if (data) { STORE = data; renderAll(data); }
+        }).catch(function(){});
+    }, 3000);
+    // Also try SSE
+    try {
+      var es = new EventSource(baseUrl + '/.json?stream=true');
+      es.addEventListener('put', function(e) {
+        try {
+          var d = JSON.parse(e.data);
+          if (d && d.data) { STORE = d.data; renderAll(d.data); }
+        } catch(err){}
+      });
+    } catch(e){}
+  }
+  setDot(true);
+}
+
+function syncToRemote(payload, type) {
+  if (APP_MODE !== 'net' || !NET_BASE_URL) return;
+  // For simplicity, push to opinions path and update votes/teacher
+  if (type === 'opinion-add') {
+    var id = payload.id;
+    fetch(NET_BASE_URL + '/debate/opinions/' + id + '.json', {method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)});
+  } else if (type === 'opinion-update') {
+    var s = getStore();
+    fetch(NET_BASE_URL + '/debate.json', {method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(s)});
+  } else if (type === 'vote-add') {
+    fetch(NET_BASE_URL + '/debate/votes.json', {method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(getStore().votes)});
+    fetch(NET_BASE_URL + '/debate/userVotes/' + payload.userId + '.json', {method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload.side)});
+  } else if (type === 'comment-add') {
+    fetch(NET_BASE_URL + '/debate/opinions/' + payload.opId + '/comments.json', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload.comment)});
+  } else if (type === 'teacher-eval') {
+    fetch(NET_BASE_URL + '/debate/teacher/' + payload.side + '.json', {method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({score: payload.score, comment: payload.comment})});
+  }
+}
+
+function setDot(on) {
+  var dot = document.getElementById('onlineDot');
+  var txt = document.getElementById('syncText');
+  if (!dot) return;
+  dot.className = 'online-dot' + (on ? '' : ' offline');
+  if (txt) txt.textContent = on ? '实时同步' : '同步中';
+}
+
+// Patch joinDebate
+var _origJoin = joinDebate;
+window.joinDebate = function() {
+  var side = document.getElementById('joinBtn').dataset.side;
+  var name = document.getElementById('nameInput').value.trim();
+  var cls = document.getElementById('classSelect').value;
+  if (!side || !name || !cls) return;
+  currentUser = {side: side, name: name, cls: cls, id: cls + '_' + name + '_' + Date.now()};
+  sessionStorage.setItem('debateUser', JSON.stringify(currentUser));
+  document.getElementById('identityModal').classList.add('hidden');
+  showUserBar();
+  showPostForm();
+  toast('欢迎 ' + name + ' 加入' + (side==='pro'?'正方':'反方') + '！', 'success');
+};
+
+function showUserBar() {
+  var bar = document.getElementById('userBar');
+  if (bar) {
+    bar.classList.remove('hidden');
+    document.getElementById('userBarName').textContent = currentUser.name;
+    var tag = document.getElementById('userBarTag');
+    tag.textContent = currentUser.side === 'pro' ? '&#128293; 正方' : '&#127754; 反方';
+    tag.className = 'user-tag ' + currentUser.side;
+    document.getElementById('userBarClass').textContent = currentUser.cls;
+  }
+}
+
+function showPostForm() {
+  var proF = document.getElementById('proForm');
+  var conF = document.getElementById('conForm');
+  if (proF) proF.style.display = currentUser && currentUser.side === 'pro' ? 'block' : 'none';
+  if (conF) conF.style.display = currentUser && currentUser.side === 'con' ? 'block' : 'none';
+}
+
+var _origChange = changeIdentity;
+window.changeIdentity = function() {
+  currentUser = null;
+  sessionStorage.removeItem('debateUser');
+  var bar = document.getElementById('userBar');
+  if (bar) bar.classList.add('hidden');
+  document.getElementById('proForm').style.display = 'none';
+  document.getElementById('conForm').style.display = 'none';
+  document.getElementById('identityModal').classList.remove('hidden');
+  document.getElementById('proBtn').classList.remove('active');
+  document.getElementById('conBtn').classList.remove('active');
+  document.getElementById('joinBtn').disabled = true;
+  document.getElementById('nameInput').value = '';
+  document.getElementById('classSelect').value = '';
+};
+
+// ===== INIT =====
+
+</script>
+</body>
+</html>
